@@ -108,7 +108,9 @@ class Player
 
 end
 
-module Game
+require_relative 'database.rb'
+require 'table_print'
+class Game
 
   def self.show_start_screen
     clear_screen
@@ -155,14 +157,14 @@ module Game
      winner ||= :no_winner # Se os dois passaram de 21 retornamos :no_winner se não retornamos o vencedor
   end
 
-  def self.show_winner(player,ia)
+  def show_winner
 
     puts "Cartas da Máquina: "
-    ia.hand.show_hand
-    puts "Total Máquina:#{ia.hand.total}"
-    puts "Total Jogador:#{player.hand.total}"
+    @ia.hand.show_hand
+    puts "Total Máquina:#{@ia.hand.total}"
+    puts "Total Jogador:#{@player.hand.total}"
 
-    result = case verify_winner(player,ia)
+    result = case Game.verify_winner(@player,@ia)
       when :player then "Você venceu! Parabéns"
       when :ia then "O computador ganhou"
       when :draw then "Deu empate!"
@@ -171,10 +173,93 @@ module Game
     puts result
   end
 
-  def self.show_score(victories: , draws:, losses:)
-    puts "Vitorias: #{victories}"
-    puts "Empates: #{draws}"
-    puts "Derrotas: #{losses}"
+  def show_score
+    puts "Vitorias: #{@player_victories}"
+    puts "Empates: #{@player_draws}"
+    puts "Derrotas: #{@ia_victories}"
+  end
+
+  def start
+    #Programa rodando
+
+    @player_victories = 0
+    @player_draws = 0
+    @ia_victories = 0
+    Game.show_start_screen
+
+    case gets.chomp
+      when "S" then start_score
+      when "Q" then return
+      else start_game
+    end
+
+  end
+
+  def start_score
+    Game.clear_screen
+    puts "SCORE 21"
+    # puts "Jogador |Vitorias |Empates|Derrotas |"
+    # Score.all.each do |score|
+    #   puts "#{score.player} |#{score.victories} |#{score.draws}  |#{score.losses}"
+    # end
+
+
+    tp Score.reverse(:victories).all , {jogador:{ display_method: :player}}, {vitorias:{display_method: :victories}}, {empates:{display_method: :draws}}, {derrotas: {display_method: :losses}}
+    gets
+  end
+
+  def start_game
+    Game.clear_screen
+    #until exit == true
+    while true
+      @deck ||= Deck.new
+      @ia ||= Robot.new [@deck.get_card,@deck.get_card]
+      @player ||= Player.new [@deck.get_card,@deck.get_card]
+
+      @player.hand.show_hand
+
+      puts "Escolha uma opção:"
+      puts %{
+        1) Pegar outra carta
+        2) Parar
+      }
+
+      option = gets.chomp #pego a opção
+      case option
+      when "1" #Pegar outra carta
+        @player.hand.add_card @deck.get_card
+      when "2" #Parar
+        while @ia.get_another_card?
+          @ia.hand.add_card @deck.get_card
+        end
+
+        winner = Game.verify_winner(@player,@ia)
+        @player_victories += 1 if winner == :player
+        @player_draws += 1 if winner == :draw
+        @ia_victories += 1 if winner == :ia
+        show_winner
+        show_score
+        gets
+        Game.clear_screen
+
+        #Zerar o estado das varivaveis
+        @deck = nil
+        @ia = nil
+        @player = nil
+
+        #
+        puts "Deseja Continuar? (S/N)"
+        if gets.chomp == "N"
+          puts "Qual é o seu nome?"
+          nome = gets.chomp
+          Score.create(player: nome,victories: @player_victories,draws: @player_draws, losses: @ia_victories)
+          start_score
+          break
+        end
+        Game.clear_screen
+      end
+
+    end
   end
 end
 # deck = Deck.new
@@ -188,57 +273,4 @@ end
 # end
 # ia.hand.show_hand
 #exit = false
-
-#Programa rodando
-
-player_victories = 0
-player_draws = 0
-ia_victories = 0
-Game.show_start_screen
-gets
-Game.clear_screen
-#until exit == true
-while true
-  deck ||= Deck.new
-  ia ||= Robot.new [deck.get_card,deck.get_card]
-  player ||= Player.new [deck.get_card,deck.get_card]
-
-  player.hand.show_hand
-
-  puts "Escolha uma opção:"
-  puts %{
-    1) Pegar outra carta
-    2) Parar
-  }
-
-  option = gets.chomp #pego a opção
-  case option
-  when "1" #Pegar outra carta
-    player.hand.add_card deck.get_card
-  when "2" #Parar
-    while ia.get_another_card?
-      ia.hand.add_card deck.get_card
-    end
-
-    winner = Game.verify_winner(player,ia)
-    player_victories += 1 if winner == :player
-    player_draws += 1 if winner == :draw
-    ia_victories += 1 if winner == :ia
-    Game.show_winner(player,ia)
-    Game.show_score(victories: player_victories, draws: player_draws, losses: ia_victories)
-    gets
-    Game.clear_screen
-
-    #Zerar o estado das varivaveis
-    deck = nil
-    ia = nil
-    player = nil
-
-    #
-    puts "Deseja Continuar? (S/N)"
-    break if gets.chomp == "N"
-    Game.clear_screen
-  end
-
-
-end
+Game.new.start
