@@ -181,18 +181,18 @@ class Game
 
   def start
     #Programa rodando
+    loop do
+      @player_victories = 0
+      @player_draws = 0
+      @ia_victories = 0
+      Game.show_start_screen
 
-    @player_victories = 0
-    @player_draws = 0
-    @ia_victories = 0
-    Game.show_start_screen
-
-    case gets.chomp
-      when "S" then start_score
-      when "Q" then return
-      else start_game
+      case gets.chomp
+        when "S" then start_score
+        when "Q" then return
+        else start_game
+      end
     end
-
   end
 
   def start_score
@@ -204,11 +204,13 @@ class Game
     # end
 
 
-    tp Score.reverse(:victories).all , {jogador:{ display_method: :player}}, {vitorias:{display_method: :victories}}, {empates:{display_method: :draws}}, {derrotas: {display_method: :losses}}
+    #tp Score.reverse(:victories).all , {jogador:{ display_method: :player}}, {vitorias:{display_method: :victories}}, {empates:{display_method: :draws}}, {derrotas: {display_method: :losses}}
+    tp Score.all.sort_by{|s| [s.victories, s.draws,-s.losses]}.reverse , {jogador:{ display_method: :player}}, {vitorias:{display_method: :victories}}, {empates:{display_method: :draws}}, {derrotas: {display_method: :losses}}
     gets
   end
 
   def start_game
+
     Game.clear_screen
     #until exit == true
     while true
