@@ -48,13 +48,18 @@ class Game
      winner ||= :no_winner # Se os dois passaram de 21 retornamos :no_winner se não retornamos o vencedor
   end
 
+  def puts_separator
+    puts "----------------------------------------"
+  end
+
   def show_winner
 
     puts "Cartas da Máquina: "
     @ia.hand.show_hand
+    puts_separator
     puts "Total Máquina:#{@ia.hand.total}"
     puts "Total Jogador:#{@player.hand.total}"
-
+    puts_separator
     result = case Game.verify_winner(@player,@ia)
       when :player then "Você venceu! Parabéns"
       when :ia then "O computador ganhou"
@@ -96,7 +101,9 @@ class Game
 
 
     #tp Score.reverse(:victories).all , {jogador:{ display_method: :player}}, {vitorias:{display_method: :victories}}, {empates:{display_method: :draws}}, {derrotas: {display_method: :losses}}
+    puts_separator
     tp Score.all.sort_by{|s| [s.victories, s.draws,-s.losses]}.reverse , {jogador:{ display_method: :player}}, {vitorias:{display_method: :victories}}, {empates:{display_method: :draws}}, {derrotas: {display_method: :losses}}
+    puts_separator
     gets
   end
 
@@ -130,6 +137,7 @@ class Game
         @player_victories += 1 if winner == :player
         @player_draws += 1 if winner == :draw
         @ia_victories += 1 if winner == :ia
+        puts_separator
         show_winner
         show_score
         gets
@@ -143,15 +151,16 @@ class Game
         #
         puts "Deseja Continuar? (S/N)"
         if gets.chomp == "N"
+          Game.clear_screen
           puts "Qual é o seu nome?"
           nome = gets.chomp
           Score.create(player: nome,victories: @player_victories,draws: @player_draws, losses: @ia_victories)
           start_score
           break
         end
-        Game.clear_screen
-      end
 
+      end
+      Game.clear_screen
     end
   end
 end
