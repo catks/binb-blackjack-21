@@ -30,7 +30,7 @@ class Game
 
   Pressione 'S' para visualizar o Scoreboard
   Pressione 'Q' para sair
-  Ou Pressione qualquer outra tecla para começar...}
+  Ou Pressione ENTER para começar...}
   end
 
   def self.clear_screen
@@ -41,7 +41,7 @@ class Game
      total_player = player.hand.total
      total_ia = ia.hand.total
 
-     if total_player == total_ia
+     if (total_player == total_ia) && total_player <= 21
        return :draw
      end
      winner = {player:total_player,ia:total_ia}.select{|k,v| v <= 21}.max_by{|k,v| v}&.first
@@ -102,7 +102,7 @@ class Game
 
     #tp Score.reverse(:victories).all , {jogador:{ display_method: :player}}, {vitorias:{display_method: :victories}}, {empates:{display_method: :draws}}, {derrotas: {display_method: :losses}}
     puts_separator
-    tp Score.all.sort_by{|s| [s.victories, s.draws,-s.losses]}.reverse , {jogador:{ display_method: :player}}, {vitorias:{display_method: :victories}}, {empates:{display_method: :draws}}, {derrotas: {display_method: :losses}}
+    tp Score.all.sort_by{|s| [s.victories, s.draws,-s.losses]}.reverse.take(15) , {jogador:{ display_method: :player}}, {vitorias:{display_method: :victories}}, {empates:{display_method: :draws}}, {derrotas: {display_method: :losses}}
     puts_separator
     gets
   end
